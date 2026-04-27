@@ -143,6 +143,12 @@ f_conflictCheck(int direction, float crh, float crl, float fvgTop, float fvgBott
         bool obConflict = obFound and f_overlaps(targetZoneTop, targetZoneBottom, obTop, obBottom)
         fvgConflict or obConflict
 
+f_calculateStopAnchor(int direction, float manipHigh, float manipLow, float sweepLvl, float fallbackHigh, float fallbackLow) =>
+    if direction == DIR_SHORT
+        not na(manipHigh) ? manipHigh : not na(sweepLvl) ? sweepLvl : fallbackHigh
+    else
+        not na(manipLow) ? manipLow : not na(sweepLvl) ? sweepLvl : fallbackLow
+
 f_phaseText(int phase) =>
     phase == PHASE_IDLE ? "Idle" : phase == PHASE_ACCUMULATION ? "Accumulation" : phase == PHASE_MANIPULATION ? "Manipulation" : phase == PHASE_DISTRIBUTION ? "Distribution" : "Complete/Void"
 
@@ -229,8 +235,6 @@ bool chochSignal = false
 bool shortEntrySignal = false
 bool longEntrySignal = false
 bool targetHitSignal = false
-float preSweepSwingLow = ta.lowest(low[1], swingLookback)
-float preSweepSwingHigh = ta.highest(high[1], swingLookback)
 
 if crtPhase == PHASE_ACCUMULATION and activeSetup
     accumulationBars := closeInsideRange ? accumulationBars + 1 : 0
@@ -240,6 +244,8 @@ if crtPhase == PHASE_ACCUMULATION and activeSetup
     int barsFromAccumulation = bar_index - nz(accumulationStart, 0)
     if accumulationBars >= accumulationBarsRequired and barsFromAccumulation <= maxManipulationBars + accumulationBarsRequired
         if f_detectSweep(activeCRH, activeCRL, setupDirection)
+            float preSweepSwingLow = ta.lowest(low[1], swingLookback)
+            float preSweepSwingHigh = ta.highest(high[1], swingLookback)
             crtPhase := PHASE_MANIPULATION
             manipCandleIndex := bar_index
             manipulationHigh := high
@@ -296,7 +302,7 @@ if crtPhase == PHASE_DISTRIBUTION and activeSetup and not entryTriggered
     if entryByMode
         entryTriggered := true
         lastEntry := close
-        float stopAnchor = setupDirection == DIR_SHORT ? nz(manipulationHigh, nz(sweepLevel, high)) : nz(manipulationLow, nz(sweepLevel, low))
+        float stopAnchor = f_calculateStopAnchor(setupDirection, manipulationHigh, manipulationLow, sweepLevel, high, low)
         lastStop := setupDirection == DIR_SHORT ? stopAnchor + f_rangeTolerance(activeCRH, activeCRL) : stopAnchor - f_rangeTolerance(activeCRH, activeCRL)
         lastTp1 := activeCRMid
         lastTp2 := setupDirection == DIR_SHORT ? activeCRL : activeCRH
@@ -335,7 +341,9 @@ plotshape(showSignals and longEntrySignal, title="CRT Long Entry", style=shape.t
 
 if showDashboard and barstate.islast
     string htfLtfText = str.tostring(htfInput) + " / " + str.tostring(ltfReference)
-    bool chartTimeframeMatches = timeframe.period == ltfReference
+    int chartTimeframeSeconds = timeframe.in_seconds(timeframe.period)
+    int ltfReferenceSeconds = timeframe.in_seconds(ltfReference)
+    bool chartTimeframeMatches = chartTimeframeSeconds == ltfReferenceSeconds
     string chartTimeframeText = chartTimeframeMatches ? timeframe.period : str.tostring(timeframe.period) + " (ref: " + str.tostring(ltfReference) + ")"
     color chartTimeframeColor = chartTimeframeMatches ? color.white : color.orange
 
