@@ -1,0 +1,352 @@
+//@version=5
+indicator("CRT AMD Distribution Indicator", "CRT AMD", overlay=true, max_lines_count=500, max_labels_count=500, max_boxes_count=500)
+
+//------------------------------------------------------------------------------
+// Inputs
+//------------------------------------------------------------------------------
+groupRange = "1. CRT Range"
+htfInput = input.timeframe("D", "Higher Timeframe Range Candle", group=groupRange)
+ltfReference = input.timeframe("60", "Lower Timeframe Reference", group=groupRange, tooltip="Run the indicator on this lower timeframe for best results. This value is displayed in the dashboard only.")
+rangesToShow = input.int(3, "Completed HTF Ranges To Display", minval=1, maxval=20, group=groupRange)
+accumulationBarsRequired = input.int(3, "Accumulation Bars Required", minval=1, maxval=50, group=groupRange)
+maxManipulationBars = input.int(5, "Max Bars From Accumulation To Sweep", minval=1, maxval=100, group=groupRange)
+
+groupSweep = "2. Sweep / Entry Logic"
+toleranceMode = input.string("Ticks", "Sweep Tolerance Mode", options=["Ticks", "Percent of Range"], group=groupSweep)
+sweepToleranceTicks = input.int(1, "Sweep Tolerance (Ticks)", minval=0, group=groupSweep)
+sweepTolerancePercent = input.float(0.02, "Sweep Tolerance (% Of Range)", minval=0.0, step=0.01, group=groupSweep)
+entryMode = input.string("FVG Fill + CHoCH", "Distribution Entry Mode", options=["FVG Fill + CHoCH", "CHoCH Break", "Either"], group=groupSweep)
+swingLookback = input.int(3, "CHoCH Swing Lookback", minval=1, maxval=20, group=groupSweep)
+fvgMaxAge = input.int(30, "FVG Entry Valid For Bars", minval=1, maxval=200, group=groupSweep)
+
+groupFilter = "3. External Market Structure Filter"
+enableConflictFilter = input.bool(true, "Flag Conflicting PD Arrays", group=groupFilter)
+obImpulseAtrMultiplier = input.float(1.0, "Order Block Impulse ATR Multiplier", minval=0.1, step=0.1, group=groupFilter)
+conflictZonePercent = input.float(35.0, "Conflict Search Zone (% Of CRT Range Near Target)", minval=1.0, maxval=100.0, step=1.0, group=groupFilter)
+
+groupVisual = "4. Visuals"
+showRangeLines = input.bool(true, "Show CRH / CRL / Mid Lines", group=groupVisual)
+showPremiumDiscount = input.bool(true, "Show Premium / Discount Zones", group=groupVisual)
+showPhaseLabels = input.bool(true, "Show AMD Phase Labels", group=groupVisual)
+showFvgBoxes = input.bool(true, "Show FVG Boxes", group=groupVisual)
+showSignals = input.bool(true, "Show Entry Signals", group=groupVisual)
+showTradeLevels = input.bool(true, "Show TP / SL Lines", group=groupVisual)
+showDashboard = input.bool(true, "Show Dashboard", group=groupVisual)
+
+//------------------------------------------------------------------------------
+// Constants and state
+//------------------------------------------------------------------------------
+int PHASE_IDLE = 0
+int PHASE_ACCUMULATION = 1
+int PHASE_MANIPULATION = 2
+int PHASE_DISTRIBUTION = 3
+int PHASE_COMPLETE = 4
+int DIR_NONE = 0
+int DIR_SHORT = -1
+int DIR_LONG = 1
+
+var int crtPhase = PHASE_IDLE
+var int setupDirection = DIR_NONE
+var float activeCRH = na
+var float activeCRL = na
+var float activeCRMid = na
+var float activeCROpen = na
+var float activeCRClose = na
+var int activeRangeStart = na
+var int accumulationStart = na
+var int accumulationBars = 0
+var int manipCandleIndex = na
+var float manipulationHigh = na
+var float manipulationLow = na
+var float sweepLevel = na
+var float chochReference = na
+var bool chochConfirmed = false
+var bool setupCaution = false
+var bool entryTriggered = false
+var float activeFvgTop = na
+var float activeFvgBottom = na
+var int activeFvgDirection = DIR_NONE
+var int activeFvgBar = na
+var float lastEntry = na
+var float lastStop = na
+var float lastTp1 = na
+var float lastTp2 = na
+
+var array<line> crhLines = array.new_line()
+var array<line> crlLines = array.new_line()
+var array<line> midLines = array.new_line()
+var array<box> premiumBoxes = array.new_box()
+var array<box> discountBoxes = array.new_box()
+var array<box> fvgBoxes = array.new_box()
+var array<line> tradeLines = array.new_line()
+var array<label> tradeLabels = array.new_label()
+var table dashboard = table.new(position.top_right, 2, 8, border_width=1)
+
+//------------------------------------------------------------------------------
+// Helpers
+//------------------------------------------------------------------------------
+f_getHTFData(string tf) =>
+    request.security(syminfo.tickerid, tf, [open[1], high[1], low[1], close[1], time[1]], lookahead=barmerge.lookahead_on)
+
+f_rangeTolerance(float crh, float crl) =>
+    float rangeSize = math.max(crh - crl, syminfo.mintick)
+    toleranceMode == "Ticks" ? sweepToleranceTicks * syminfo.mintick : rangeSize * sweepTolerancePercent * 0.01
+
+f_isInPremium(float price, float crh, float crl) =>
+    price >= (crh + crl) * 0.5
+
+f_isInDiscount(float price, float crh, float crl) =>
+    price <= (crh + crl) * 0.5
+
+f_detectSweep(float crh, float crl, int direction) =>
+    float tolerance = f_rangeTolerance(crh, crl)
+    bool bearishSweep = high > crh + tolerance and close < crh and close > crl
+    bool bullishSweep = low < crl - tolerance and close > crl and close < crh
+    direction == DIR_SHORT ? bearishSweep : direction == DIR_LONG ? bullishSweep : false
+
+f_detectInvalidation(float crh, float crl, int direction) =>
+    direction == DIR_SHORT ? close > crh : direction == DIR_LONG ? close < crl : false
+
+f_detectCHoCH(float swingRef, int direction) =>
+    direction == DIR_SHORT ? close < swingRef : direction == DIR_LONG ? close > swingRef : false
+
+f_detectFVG(int direction) =>
+    bool bearishFvg = high[2] < low
+    bool bullishFvg = low[2] > high
+    bool found = direction == DIR_SHORT ? bearishFvg : direction == DIR_LONG ? bullishFvg : false
+    float top = direction == DIR_SHORT ? low : low[2]
+    float bottom = direction == DIR_SHORT ? high[2] : high
+    [found, math.max(top, bottom), math.min(top, bottom)]
+
+f_detectOrderBlock(int direction) =>
+    float atr = ta.atr(14)
+    bool strongBearishMove = close < open and math.abs(close - open) >= atr * obImpulseAtrMultiplier
+    bool strongBullishMove = close > open and math.abs(close - open) >= atr * obImpulseAtrMultiplier
+    bool bullishOB = direction == DIR_LONG and strongBullishMove and close[1] < open[1]
+    bool bearishOB = direction == DIR_SHORT and strongBearishMove and close[1] > open[1]
+    bool found = bullishOB or bearishOB
+    [found, math.max(open[1], close[1]), math.min(open[1], close[1])]
+
+f_overlaps(float zoneTopA, float zoneBottomA, float zoneTopB, float zoneBottomB) =>
+    not na(zoneTopA) and not na(zoneBottomA) and not na(zoneTopB) and not na(zoneBottomB) and zoneBottomA <= zoneTopB and zoneBottomB <= zoneTopA
+
+f_conflictCheck(int direction, float crh, float crl, float fvgTop, float fvgBottom, float obTop, float obBottom, bool obFound) =>
+    if not enableConflictFilter
+        false
+    else
+        float rangeSize = math.max(crh - crl, syminfo.mintick)
+        float conflictDepth = rangeSize * conflictZonePercent * 0.01
+        float targetZoneTop = direction == DIR_SHORT ? crl + conflictDepth : crh
+        float targetZoneBottom = direction == DIR_SHORT ? crl : crh - conflictDepth
+        bool fvgConflict = f_overlaps(targetZoneTop, targetZoneBottom, fvgTop, fvgBottom)
+        bool obConflict = obFound and f_overlaps(targetZoneTop, targetZoneBottom, obTop, obBottom)
+        fvgConflict or obConflict
+
+f_phaseText(int phase) =>
+    phase == PHASE_IDLE ? "Idle" : phase == PHASE_ACCUMULATION ? "Accumulation" : phase == PHASE_MANIPULATION ? "Manipulation" : phase == PHASE_DISTRIBUTION ? "Distribution" : "Complete/Void"
+
+f_directionText(int direction) =>
+    direction == DIR_SHORT ? "Short / Bearish" : direction == DIR_LONG ? "Long / Bullish" : "None"
+
+f_trimLineArray(array<line> lines, int keep) =>
+    while array.size(lines) > keep
+        line.delete(array.shift(lines))
+
+f_trimBoxArray(array<box> boxes, int keep) =>
+    while array.size(boxes) > keep
+        box.delete(array.shift(boxes))
+
+f_trimLabelArray(array<label> labels, int keep) =>
+    while array.size(labels) > keep
+        label.delete(array.shift(labels))
+
+f_newLabel(int x, float y, string text, color labelColor, color textColor, label.style style) =>
+    label.new(x=x, y=y, text=text, style=style, color=labelColor, textcolor=textColor, size=size.small)
+
+//------------------------------------------------------------------------------
+// HTF range cache
+//------------------------------------------------------------------------------
+[htfOpen, htfHigh, htfLow, htfClose, htfTime] = f_getHTFData(htfInput)
+bool hasHTFRange = not na(htfOpen) and not na(htfHigh) and not na(htfLow) and not na(htfClose)
+bool newHTFRange = hasHTFRange and ta.change(htfTime)
+
+if newHTFRange
+    activeCRH := htfHigh
+    activeCRL := htfLow
+    activeCRMid := (htfHigh + htfLow) * 0.5
+    activeCROpen := htfOpen
+    activeCRClose := htfClose
+    activeRangeStart := bar_index
+    accumulationStart := bar_index
+    accumulationBars := 0
+    manipCandleIndex := na
+    manipulationHigh := na
+    manipulationLow := na
+    sweepLevel := na
+    chochReference := na
+    chochConfirmed := false
+    setupCaution := false
+    entryTriggered := false
+    activeFvgTop := na
+    activeFvgBottom := na
+    activeFvgDirection := DIR_NONE
+    activeFvgBar := na
+    setupDirection := activeCRClose > activeCROpen ? DIR_SHORT : activeCRClose < activeCROpen ? DIR_LONG : DIR_NONE
+    crtPhase := setupDirection == DIR_NONE ? PHASE_IDLE : PHASE_ACCUMULATION
+
+    if showRangeLines
+        array.push(crhLines, line.new(bar_index, activeCRH, bar_index + 1, activeCRH, extend=extend.right, color=color.new(color.red, 0), style=line.style_dashed, width=1))
+        array.push(crlLines, line.new(bar_index, activeCRL, bar_index + 1, activeCRL, extend=extend.right, color=color.new(color.green, 0), style=line.style_dashed, width=1))
+        array.push(midLines, line.new(bar_index, activeCRMid, bar_index + 1, activeCRMid, extend=extend.right, color=color.new(color.gray, 0), style=line.style_dashed, width=1))
+        f_trimLineArray(crhLines, rangesToShow)
+        f_trimLineArray(crlLines, rangesToShow)
+        f_trimLineArray(midLines, rangesToShow)
+
+    if showPremiumDiscount
+        array.push(premiumBoxes, box.new(bar_index, activeCRH, bar_index + 1, activeCRMid, bgcolor=color.new(color.red, 90), border_color=color.new(color.red, 100)))
+        array.push(discountBoxes, box.new(bar_index, activeCRMid, bar_index + 1, activeCRL, bgcolor=color.new(color.green, 90), border_color=color.new(color.green, 100)))
+        f_trimBoxArray(premiumBoxes, rangesToShow)
+        f_trimBoxArray(discountBoxes, rangesToShow)
+
+    if showPhaseLabels
+        f_newLabel(bar_index, activeCRMid, "HTF CRT Range\n" + f_directionText(setupDirection), color.new(color.blue, 15), color.white, label.style_label_left)
+
+if array.size(premiumBoxes) > 0
+    box.set_right(array.get(premiumBoxes, array.size(premiumBoxes) - 1), bar_index)
+if array.size(discountBoxes) > 0
+    box.set_right(array.get(discountBoxes, array.size(discountBoxes) - 1), bar_index)
+
+//------------------------------------------------------------------------------
+// AMD state machine
+//------------------------------------------------------------------------------
+bool activeSetup = crtPhase != PHASE_IDLE and crtPhase != PHASE_COMPLETE and not na(activeCRH) and not na(activeCRL)
+bool closeInsideRange = activeSetup and close <= activeCRH and close >= activeCRL
+bool bearishSweepSignal = false
+bool bullishSweepSignal = false
+bool invalidationSignal = false
+bool chochSignal = false
+bool shortEntrySignal = false
+bool longEntrySignal = false
+bool targetHitSignal = false
+
+if crtPhase == PHASE_ACCUMULATION and activeSetup
+    accumulationBars := closeInsideRange ? accumulationBars + 1 : 0
+    if showPhaseLabels and accumulationBars == accumulationBarsRequired
+        f_newLabel(bar_index, activeCRMid, "ACC", color.new(color.gray, 10), color.white, label.style_label_center)
+
+    int barsFromAccumulation = bar_index - nz(accumulationStart, bar_index)
+    if accumulationBars >= accumulationBarsRequired and barsFromAccumulation <= maxManipulationBars + accumulationBarsRequired
+        if f_detectSweep(activeCRH, activeCRL, setupDirection)
+            crtPhase := PHASE_MANIPULATION
+            manipCandleIndex := bar_index
+            manipulationHigh := high
+            manipulationLow := low
+            sweepLevel := setupDirection == DIR_SHORT ? high : low
+            chochReference := setupDirection == DIR_SHORT ? ta.lowest(low, swingLookback)[1] : ta.highest(high, swingLookback)[1]
+            bearishSweepSignal := setupDirection == DIR_SHORT
+            bullishSweepSignal := setupDirection == DIR_LONG
+            if showPhaseLabels
+                string sweepText = setupDirection == DIR_SHORT ? "MANIP ↑\nBuy-side Sweep" : "MANIP ↓\nSell-side Sweep"
+                f_newLabel(bar_index, sweepLevel, sweepText, color.new(color.orange, 0), color.white, setupDirection == DIR_SHORT ? label.style_label_down : label.style_label_up)
+        else if f_detectInvalidation(activeCRH, activeCRL, setupDirection)
+            crtPhase := PHASE_COMPLETE
+            invalidationSignal := true
+
+if crtPhase == PHASE_MANIPULATION and activeSetup
+    if f_detectInvalidation(activeCRH, activeCRL, setupDirection)
+        crtPhase := PHASE_COMPLETE
+        invalidationSignal := true
+    else if not chochConfirmed and f_detectCHoCH(chochReference, setupDirection)
+        chochConfirmed := true
+        chochSignal := true
+        crtPhase := PHASE_DISTRIBUTION
+        if showPhaseLabels
+            f_newLabel(bar_index, close, "CHoCH", color.new(color.purple, 0), color.white, setupDirection == DIR_SHORT ? label.style_label_down : label.style_label_up)
+
+if (crtPhase == PHASE_MANIPULATION or crtPhase == PHASE_DISTRIBUTION) and activeSetup
+    [fvgFound, fvgTop, fvgBottom] = f_detectFVG(setupDirection)
+    bool fvgInCorrectZone = setupDirection == DIR_SHORT ? f_isInPremium((fvgTop + fvgBottom) * 0.5, activeCRH, activeCRL) : f_isInDiscount((fvgTop + fvgBottom) * 0.5, activeCRH, activeCRL)
+    if fvgFound and fvgInCorrectZone
+        activeFvgTop := fvgTop
+        activeFvgBottom := fvgBottom
+        activeFvgDirection := setupDirection
+        activeFvgBar := bar_index
+        if showFvgBoxes
+            color fvgColor = setupDirection == DIR_SHORT ? color.new(color.red, 82) : color.new(color.green, 82)
+            array.push(fvgBoxes, box.new(bar_index - 2, activeFvgTop, bar_index + fvgMaxAge, activeFvgBottom, bgcolor=fvgColor, border_color=color.new(fvgColor, 0)))
+            f_trimBoxArray(fvgBoxes, rangesToShow * 8)
+
+if crtPhase == PHASE_DISTRIBUTION and activeSetup and not entryTriggered
+    bool fvgStillValid = not na(activeFvgBar) and bar_index - activeFvgBar <= fvgMaxAge
+    bool fvgFill = fvgStillValid and high >= activeFvgBottom and low <= activeFvgTop
+    bool chochBreakEntry = chochSignal or chochConfirmed
+    bool entryByMode = entryMode == "FVG Fill + CHoCH" ? chochConfirmed and fvgFill : entryMode == "CHoCH Break" ? chochBreakEntry : chochBreakEntry or fvgFill
+    [opposingObFound, opposingObTop, opposingObBottom] = f_detectOrderBlock(setupDirection == DIR_SHORT ? DIR_LONG : DIR_SHORT)
+    setupCaution := f_conflictCheck(setupDirection, activeCRH, activeCRL, activeFvgTop, activeFvgBottom, opposingObTop, opposingObBottom, opposingObFound)
+
+    if entryByMode
+        entryTriggered := true
+        lastEntry := close
+        lastStop := setupDirection == DIR_SHORT ? manipulationHigh + f_rangeTolerance(activeCRH, activeCRL) : manipulationLow - f_rangeTolerance(activeCRH, activeCRL)
+        lastTp1 := activeCRMid
+        lastTp2 := setupDirection == DIR_SHORT ? activeCRL : activeCRH
+        shortEntrySignal := setupDirection == DIR_SHORT
+        longEntrySignal := setupDirection == DIR_LONG
+
+        if showSignals
+            string entryText = (setupDirection == DIR_SHORT ? "SHORT" : "LONG") + (setupCaution ? "\nCAUTION: PD conflict" : "")
+            f_newLabel(bar_index, lastEntry, entryText, setupCaution ? color.new(color.yellow, 0) : setupDirection == DIR_SHORT ? color.new(color.red, 0) : color.new(color.green, 0), setupCaution ? color.black : color.white, setupDirection == DIR_SHORT ? label.style_label_down : label.style_label_up)
+
+        if showTradeLevels
+            color tradeColor = setupDirection == DIR_SHORT ? color.red : color.green
+            array.push(tradeLines, line.new(bar_index, lastEntry, bar_index + 1, lastEntry, extend=extend.right, color=tradeColor, width=2))
+            array.push(tradeLines, line.new(bar_index, lastStop, bar_index + 1, lastStop, extend=extend.right, color=color.new(color.orange, 0), style=line.style_dotted))
+            array.push(tradeLines, line.new(bar_index, lastTp1, bar_index + 1, lastTp1, extend=extend.right, color=color.new(color.gray, 0), style=line.style_dotted))
+            array.push(tradeLines, line.new(bar_index, lastTp2, bar_index + 1, lastTp2, extend=extend.right, color=color.new(color.teal, 0), style=line.style_dotted))
+            array.push(tradeLabels, f_newLabel(bar_index, lastEntry, "Entry", tradeColor, color.white, label.style_label_left))
+            array.push(tradeLabels, f_newLabel(bar_index, lastStop, "SL", color.new(color.orange, 0), color.white, label.style_label_left))
+            array.push(tradeLabels, f_newLabel(bar_index, lastTp1, "TP1 / Mid", color.new(color.gray, 0), color.white, label.style_label_left))
+            array.push(tradeLabels, f_newLabel(bar_index, lastTp2, "TP2 / Target", color.new(color.teal, 0), color.white, label.style_label_left))
+            f_trimLineArray(tradeLines, 40)
+            f_trimLabelArray(tradeLabels, 40)
+
+if activeSetup and setupDirection == DIR_SHORT and low <= activeCRL
+    crtPhase := PHASE_COMPLETE
+    targetHitSignal := true
+if activeSetup and setupDirection == DIR_LONG and high >= activeCRH
+    crtPhase := PHASE_COMPLETE
+    targetHitSignal := true
+
+//------------------------------------------------------------------------------
+// Plot shapes and dashboard
+//------------------------------------------------------------------------------
+plotshape(showSignals and shortEntrySignal, title="CRT Short Entry", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, text="CRT")
+plotshape(showSignals and longEntrySignal, title="CRT Long Entry", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, text="CRT")
+
+if showDashboard and barstate.islast
+    table.cell(dashboard, 0, 0, "CRT Indicator", bgcolor=color.new(color.blue, 0), text_color=color.white)
+    table.cell(dashboard, 1, 0, syminfo.ticker, bgcolor=color.new(color.blue, 0), text_color=color.white)
+    table.cell(dashboard, 0, 1, "HTF / LTF", text_color=color.white, bgcolor=color.new(color.gray, 65))
+    table.cell(dashboard, 1, 1, htfInput + " / " + ltfReference)
+    table.cell(dashboard, 0, 2, "CRH")
+    table.cell(dashboard, 1, 2, na(activeCRH) ? "n/a" : str.tostring(activeCRH, format.mintick))
+    table.cell(dashboard, 0, 3, "CRL")
+    table.cell(dashboard, 1, 3, na(activeCRL) ? "n/a" : str.tostring(activeCRL, format.mintick))
+    table.cell(dashboard, 0, 4, "Mid")
+    table.cell(dashboard, 1, 4, na(activeCRMid) ? "n/a" : str.tostring(activeCRMid, format.mintick))
+    table.cell(dashboard, 0, 5, "Phase")
+    table.cell(dashboard, 1, 5, f_phaseText(crtPhase))
+    table.cell(dashboard, 0, 6, "Bias")
+    table.cell(dashboard, 1, 6, f_directionText(setupDirection))
+    table.cell(dashboard, 0, 7, "Status")
+    table.cell(dashboard, 1, 7, setupCaution ? "Caution" : invalidationSignal ? "Void" : entryTriggered ? "Entry active" : targetHitSignal ? "Target hit" : "Valid")
+
+//------------------------------------------------------------------------------
+// Alerts
+//------------------------------------------------------------------------------
+alertcondition(bearishSweepSignal, "CRT Manipulation Sweep Detected (Bearish)", "CRT bearish manipulation sweep detected: buy-side liquidity swept and closed back inside range.")
+alertcondition(bullishSweepSignal, "CRT Manipulation Sweep Detected (Bullish)", "CRT bullish manipulation sweep detected: sell-side liquidity swept and closed back inside range.")
+alertcondition(shortEntrySignal, "CRT Distribution Entry Signal — Short", "CRT short distribution entry signal.")
+alertcondition(longEntrySignal, "CRT Distribution Entry Signal — Long", "CRT long distribution entry signal.")
+alertcondition(invalidationSignal, "CRT Setup Invalidated", "CRT setup invalidated by close beyond the CRT range.")
+alertcondition(targetHitSignal, "CRT Target (CRL/CRH) Reached", "CRT full range target reached.")
