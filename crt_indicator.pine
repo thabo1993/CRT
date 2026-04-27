@@ -196,8 +196,8 @@ f_updateHTFCandleWick(line candleWick, int leftIndex, int rightIndex, float cand
     line.set_color(candleWick, color.new(candleColor, 0))
     line.set_width(candleWick, htfCandleWickWidth)
 
-f_newLabel(x, y, text, labelColor, textColor, labelStyle) =>
-    label.new(x=x, y=y, text=text, style=labelStyle, color=labelColor, textcolor=textColor, size=size.small)
+f_newLabel(x, y, labelText, labelColor, textColor, labelStyle) =>
+    label.new(x=x, y=y, text=labelText, style=labelStyle, color=labelColor, textcolor=textColor, size=size.small)
 
 //------------------------------------------------------------------------------
 // HTF range cache
