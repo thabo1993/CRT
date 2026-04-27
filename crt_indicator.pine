@@ -160,15 +160,15 @@ f_trimLabelArray(array<label> labels, int keep) =>
     while array.size(labels) > keep
         label.delete(array.shift(labels))
 
-f_newLabel(int x, float y, string text, color labelColor, color textColor, label.style style) =>
-    label.new(x=x, y=y, text=text, style=style, color=labelColor, textcolor=textColor, size=size.small)
+f_newLabel(x, y, text, labelColor, textColor, labelStyle) =>
+    label.new(x=x, y=y, text=text, style=labelStyle, color=labelColor, textcolor=textColor, size=size.small)
 
 //------------------------------------------------------------------------------
 // HTF range cache
 //------------------------------------------------------------------------------
 [htfOpen, htfHigh, htfLow, htfClose, htfTime] = f_getHTFData(htfInput)
 bool hasHTFRange = not na(htfOpen) and not na(htfHigh) and not na(htfLow) and not na(htfClose)
-bool newHTFRange = hasHTFRange and ta.change(htfTime)
+bool newHTFRange = hasHTFRange and ta.change(htfTime) != 0
 
 if newHTFRange
     activeCRH := htfHigh
