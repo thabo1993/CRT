@@ -190,7 +190,7 @@ f_updateHTFCandleBody(box candleBody, int leftIndex, int rightIndex, float candl
 
 f_updateHTFCandleWick(line candleWick, int leftIndex, int rightIndex, float candleHigh, float candleLow, float candleOpen, float candleClose) =>
     color candleColor = f_htfCandleColor(candleOpen, candleClose)
-    int wickX = int(math.round((leftIndex + rightIndex) * 0.5))
+    int wickX = math.round((leftIndex + rightIndex) * 0.5)
     line.set_xy1(candleWick, wickX, candleHigh)
     line.set_xy2(candleWick, wickX, candleLow)
     line.set_color(candleWick, color.new(candleColor, 0))
@@ -227,7 +227,7 @@ if newHTFRange
     activeFvgBottom := na
     activeFvgDirection := DIR_NONE
     activeFvgBar := na
-    // CRT reversal bias: a bullish HTF range looks for buy-side manipulation into shorts, while a bearish range looks for sell-side manipulation into longs.
+    // CRT reversal bias: a bullish HTF candle anticipates bearish reversal after a buy-side sweep; a bearish HTF candle anticipates bullish reversal after a sell-side sweep.
     setupDirection := activeCRClose > activeCROpen ? DIR_SHORT : activeCRClose < activeCROpen ? DIR_LONG : DIR_NONE
     crtPhase := setupDirection == DIR_NONE ? PHASE_IDLE : PHASE_ACCUMULATION
 
@@ -286,8 +286,8 @@ if crtPhase == PHASE_ACCUMULATION and activeSetup
     if showPhaseLabels and accumulationBars == accumulationBarsRequired
         f_newLabel(bar_index, activeCRMid, "ACC", color.new(color.gray, 10), color.white, label.style_label_center)
 
-    int barsFromAccumulation = bar_index - nz(accumulationStart, 0)
-    if accumulationBars >= accumulationBarsRequired and barsFromAccumulation <= maxManipulationBars + accumulationBarsRequired
+    int barsFromAccumulation = na(accumulationStart) ? na : bar_index - accumulationStart
+    if not na(barsFromAccumulation) and accumulationBars >= accumulationBarsRequired and barsFromAccumulation <= maxManipulationBars + accumulationBarsRequired
         if f_detectSweep(activeCRH, activeCRL, setupDirection)
             float preSweepSwingLow = ta.lowest(low[1], swingLookback)
             float preSweepSwingHigh = ta.highest(high[1], swingLookback)

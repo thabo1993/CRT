@@ -65,7 +65,7 @@ This repository contains a Pine Script v5 indicator for TradingView that helps i
 
 ### Two-candle / nested lower-timeframe CRT model
 
-- A CRT setup can complete in fewer higher-timeframe candles when the lower timeframe shows a full AMD sequence.
+- A CRT setup can complete in fewer higher-timeframe candles when the lower-timeframe chart shows a full AMD sequence.
 - The lower timeframe should still show accumulation, a liquidity sweep, CHoCH, and a valid FVG entry catalyst.
 
 ### Liquidity-run versus liquidity-sweep CRT
