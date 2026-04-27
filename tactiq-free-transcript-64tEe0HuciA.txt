@@ -1,0 +1,273 @@
+# tactiq.io free youtube transcript
+# Best CRT Trading Strategy | Candle Range Theory Explained
+# https://www.youtube.com/watch/64tEe0HuciA
+
+00:00:00.000 When analyzing market structure,
+00:00:01.720 we typically use the highsand lows on the chart to define the range.
+00:00:05.400 But in candle range theory,the idea is that every individual candle
+00:00:09.280 actually holds its own range.
+00:00:11.360 And this makes sense,
+00:00:12.440 because when we look at thisdaily candle on the one hour timeframe,
+00:00:15.680 we can see that the daily candles wicks 
+00:00:17.520 represent the one hour swing low, and swing high.
+00:00:20.280 Which in itself, forms its own isolated range.
+00:00:23.240 And whilst this might seem like basicknowledge in market analysis,
+00:00:26.520 when we incorporate smart money concepts,
+00:00:28.720 this one candle setup can actually offer usconsistent, high probability trades.
+00:00:33.120 So in this video,
+00:00:34.160 we've broken down everything that youneed to know about Candle Range Theory,
+00:00:37.560 into five simple steps.
+00:00:40.560 So let's waste no time and startwith step number one,
+00:00:43.320 which is how we can use CandleRange Theory to identify trade setups.
+00:00:47.040 The typical framework for this strategy,usually involves three candles,
+00:00:50.800 and each candle hasits own important role.
+00:00:53.440 So let's start with the first candle.
+00:00:55.440 Here we have a bullish candleon the daily timeframe,
+00:00:58.080 and we can visualize this candle’s pricedata, with higher and higher accuracy,
+00:01:02.120 the lower down we go in timeframes.
+00:01:04.319 But for this strategy,
+00:01:05.319 all of the price action data weneed from all of these candles,
+00:01:08.080 can still be found in the daily candle.
+00:01:10.080 And this comes down to thebasic information that it tells us...
+00:01:12.880 which is that during this specific day,
+00:01:14.720 the market opened at this price,
+00:01:16.160 and ended up closing at this price.
+00:01:17.920 With the highest and lowestprices found in the wicks.
+00:01:20.640 Now, when it comes to Candle Range Theory,
+00:01:22.680 the belief is that both the top and bottom wicks, act as their own isolated Liquidity levels,
+00:01:27.800 that the following candles will use as targets.
+00:01:30.200 And this makes sense,
+00:01:31.360 because if you take a look at any random chart,
+00:01:33.640 you'll see that almost everyindividual candle will have attacked
+00:01:36.560 either the previous candle’s high, or its low.
+00:01:39.640 So in terms of Candle Range Theory,
+00:01:41.360 the first candle is simply used to define arange that we are interested in trading.
+00:01:45.600 And the upper Liquidity level iscalled the Candle Range High (CRH),
+00:01:48.480 and the lower Liquidity level iscalled the Candle Range Low (CRL).
+00:01:51.560 And if you're wondering which candlecan be used to define a tradable range,
+00:01:55.080 we can actually use any candlethat you might find on a chart...
+00:01:58.440 And this can also be on any timeframe...
+00:02:00.840 But there is of course criteria that helpsus define what makes a candle ideal to use.
+00:02:05.280 Which we will be coveringlater into the video.
+00:02:07.680 And then for the second candle...
+00:02:09.280 This plays the most important part in whetherwe actually have a setup, or not.
+00:02:13.240 And the reason being, is that the wholeconcept behind Candle Range Theory...
+00:02:16.720 is that if the price attacks the Candle RangeHigh (CRH), but fails to close above it,
+00:02:20.320 there's a high probability that the next targetwill become the Candle Range Low (CRL).
+00:02:24.000 So to walk through what this looks like,
+00:02:25.720 we want to see the second candle push up and abovethe Candle Range High (CRH) of the first candle,
+00:02:30.040 before then pulling back into therange, where it will then close.
+00:02:33.200 And it's crucial that we seethis Liquidity Sweep occur,
+00:02:36.000 because if we were to instead see this secondcandle close above the Candle Range High (CRH),
+00:02:40.040 the potential Candle Range Theorysetup is no longer valid,
+00:02:42.640 as it's more likely that the marketwill continue pushing up...
+00:02:45.480 instead of targeting our firstCandle’s Range Low (CRL).
+00:02:48.240 So if the criteria is metfor the second candle,
+00:02:50.640 we can then look within the thirdcandle for a setup that,
+00:02:52.960 that we can use to take a short entry,
+00:02:54.760 with our target being theCandle Range Low (CRL).
+00:02:56.840 You can of course holdyour trade for longer...
+00:02:58.800 if the external marketstructure validates it.
+00:03:01.240 but once the price has passedthe Candle Range Low (CRL),
+00:03:03.640 we consider the setup complete.
+00:03:05.440 So we have now broken downCandle Range Theory as a concept...
+00:03:09.000 but we haven't shown howwe can actually use it to enter trades.
+00:03:12.160 So let's now go down in timeframes,
+00:03:14.120 to give an example of how we mightnavigate our way through this setup.
+00:03:17.280 So here we have the price actionof the first daily candle,
+00:03:20.120 with the buy-side andsell-side Liquidity levels...
+00:03:22.840 that were created at thehigh and low of the day.
+00:03:25.120 And when we move on tothe second daily candle,
+00:03:27.240 the first thing to take note of,is the sweep on the buy-side Liquidity.
+00:03:30.800 Before the price then fallsback down into the range.
+00:03:33.560 This is important...
+00:03:34.440 because when we see that the buy-sideLiquidity of a candle has been swept,
+00:03:38.120 it typically signals that the price is goingto target the sell-side Liquidity next.
+00:03:42.560 So the Liquidity Sweepis the first phase of the setup.
+00:03:45.360 And the next piece of chartstructure we are looking for,
+00:03:47.680 is a change of character from the price pushingbelow the bullish leg that created the sweep...
+00:03:52.160 because this signals strengthin bearish momentum,
+00:03:54.800 which is what we want,if we are looking to take a short.
+00:03:57.360 And then for the final piece of criteria,
+00:03:59.520 we want to see that a bearish FairValue Gap (FVG) has been formed,
+00:04:02.440 during this bearish leg that createdthe change of character...
+00:04:05.400 because this is the PD array thatwe will actually use for our entry.
+00:04:09.240 So to summarize this so far,
+00:04:10.960 the first daily candle is used to definethe range we are looking to trade.
+00:04:14.720 And then we analyze the second candle,
+00:04:16.720 to see whether its market structurefits the criteria we are looking for.
+00:04:20.399 And this brings us onto thethird daily candle....
+00:04:23.080 which is where we can actuallylook to place our entry,
+00:04:25.880 which simply involves shortingthis bearish Fair Value Gap (FVG),
+00:04:28.560 with the target being theCandle Range Low (CRL).
+00:04:30.680 Now, it's also worth mentioning thata lot of traders that use this system,
+00:04:34.160 choose to enter trades on thebreak of the second candle's low,
+00:04:37.360 but as we know, breakouttrading is far riskier than using
+00:04:40.560 Internal Range Liquidity (IRL) as an entry target.
+00:04:43.000 And on top of this,if we think the move is going to go lower,
+00:04:46.080 the Fair Value Gap (VFG) offers us amuch better entry price anyway.
+00:04:49.480 And then with the price hitting thefirst daily Candle’s Range Low (CRL),
+00:04:52.640 this completes the three candle setup.
+00:04:54.920 We then also have the bullish variant,which involves the same fundamentals.
+00:04:58.800 Except, we are looking for manipulationon a bearish candle’s Range Low (CRL),
+00:05:02.360 with the target being it’s range high.
+00:05:04.440 So now that we've covered thebasics of Candle Range Theory,
+00:05:07.320 let's move on to the second step:
+00:05:08.880 which is that a setup using Candle Range Theory,doesn't have to involve only three candles.
+00:05:13.640 We started off with this setup,
+00:05:15.080 because it's the simplest examplefor explaining this concept.
+00:05:18.240 But in reality, there isn’t actually a rule
+00:05:20.400 for how many candles it mighttake for a setup to complete.
+00:05:23.120 This is because it doesn't matterhow many candles a CRT setup involves,
+00:05:27.160 the important criteria is that the marketstructure displays a clear AMD formation.
+00:05:31.720 And as a simple explanation for AMD...
+00:05:33.920 it stands for: Accumulation,Manipulation, and Distribution.
+00:05:37.280 which are the three phases of theSmart Money Concepts (SMC) model
+00:05:39.960 we call the ‘Power of Three’.
+00:05:41.320 And it's in the Distribution Phase wherewe would be looking for our trade entry,
+00:05:45.120 but only after we have seen theconfirmation of the first two phases.
+00:05:48.480 Now, when we look at this chart...
+00:05:49.760 we can see a clear example of theAMD structure that we are looking for.
+00:05:53.480 We of course have the first candle,
+00:05:55.080 that we are using for the CandleRange High (CRH) and Low (CRL).
+00:05:57.640 And then after this, we have thesethree candles,
+00:06:00.000 that we can see haven't moved theprice much in either direction.
+00:06:02.680 This is the Accumulation Phase.
+00:06:04.560 But then we have this next candlewhich creates a sweep on Liquidity...
+00:06:08.080 And this is the Manipulation Phasewe are wanting to see.
+00:06:10.960 But remember, it's important that thiscandle closes back within the range.
+00:06:14.600 Otherwise, the potential setup fora short trade would be void.
+00:06:17.680 And then following this, wehave these two bearish candles,
+00:06:20.640 which go on to attackthe candle range low.
+00:06:22.760 This is the Distribution Phasethat completes the setup.
+00:06:25.440 And it's where we would belooking to find an entry...
+00:06:27.920 after the Manipulation Phasehas been confirmed.
+00:06:30.480 So the takeaway here, is that theimportant part of this strategy,
+00:06:33.360 is finding the correct market structure,in the form of an AMD model.
+00:06:37.160 And with this understanding, we can evenfind setups that involve only two candles.
+00:06:41.760 But to explain how this works,
+00:06:43.200 we would have to look at thissecond candle on a lower timeframe.
+00:06:46.480 And here we can again see thatwe have another AMD model.
+00:06:49.720 With an Accumulation Phase,
+00:06:51.240 followed by Manipulation inthe form of a Liquidity Sweep.
+00:06:54.200 Before price then pushes downduring the Distribution Phase.
+00:06:57.240 And in terms of market structure analysis,
+00:06:59.280 we can see where the price creates a Changeof Character (CHoCH) after the Liquidity Sweep.
+00:07:03.200 Before then using the bearishFair Value Gap (FVG) as a catalyst,
+00:07:06.280 to attack the Candle Range Low (CRL).
+00:07:08.080 So, the point is that time is relative...
+00:07:10.160 so there is no specific amount of candles,
+00:07:12.000 that you can expect to a CRTmodel to complete within.
+00:07:14.840 The important part is making sure thatthe correct market structure is present.
+00:07:18.800 So, let's now move on to step number three:
+00:07:20.960 which is how you should pairtimeframes to find entries with CRT.
+00:07:24.480 So now that we understand theconcepts behind candle range theory,
+00:07:27.680 it's important to emphasize how we shouldactually plan our setups using this strategy.
+00:07:31.960 For example, here we have achart on the daily timeframe.
+00:07:35.040 And as we can see, the price hasattacked this buy-side Liquidity level.
+00:07:39.000 And with our knowledge onSmart Money Concepts (SMC),
+00:07:41.360 we know that this is a pivotalmoment in deciding whether
+00:07:44.000 the price will continueto push up, or push down.
+00:07:46.800 in the form of a Liquidity Run, or a Liquidity Sweep.
+00:07:49.760 Which makes this an ideal scenario,for using CRT to analyze this candle,
+00:07:54.000 to figure out what exactlythe market is going to do.
+00:07:56.720 And now, with the Candle RangeHigh (CRH), and Low (CRL) drawn out...
+00:07:59.320 we know that if the following candlesweeps the range high (CRH),
+00:08:02.000 it's likely that it will then targetthe Range Low (CRL) next.
+00:08:04.800 But observing this on the daily timeframedoesn't really tell us much,
+00:08:08.120 because whilst it will show wherethis second candle will open and close,
+00:08:11.520 it doesn't offer us the important marketstructure that we are looking for,
+00:08:14.680 in order to justify a trade.
+00:08:16.240 This is why it's important to understand
+00:08:18.080 that we only use the higher timeframe todefine the Candle’s Range High and Low,
+00:08:22.000 and then we move down toa lower timeframe,
+00:08:24.240 which allows us to actually breakdown the market structure,
+00:08:26.880 to see whether there is a tradable setup.
+00:08:28.840 And we call this timeframe alignment.
+00:08:30.680 And we use it for every type of setupusing Smart Money Concepts (SMC).
+00:08:34.480 For those unaware, here are the timeframepairings that are the best to use.
+00:08:38.480 So as an example, if you were analyzinga monthly candle using CRT,
+00:08:42.799 you would then look withinthe daily timeframe,
+00:08:44.760 to look for the ideal market structure,that could provid a potential trade setup.
+00:08:48.640 And then as another example,
+00:08:50.120 if you were analyzing a candleon the four hour timeframe,
+00:08:53.080 you would want to look for entries
+00:08:54.600 within the structure on the15 minute timeframe.
+00:08:57.320 So now moving on,we have step number four:
+00:08:59.680 Which is that when looking for entries,
+00:09:01.400 you should be targeting the idealPremium and Discount areas.
+00:09:04.800 As we have already covered,
+00:09:06.120 we know that a single candlerepresents its own isolated range
+00:09:09.520 on the lower timeframes.
+00:09:10.880 And this means we shouldbe trading a CRT range
+00:09:13.360 the same way we wouldwith any other range.
+00:09:15.720 So in the case that we are usinga bullish candle for defining our range,
+00:09:19.200 we would of course be looking fora setup to take a short trade...
+00:09:22.320 And this means, we would wantto be looking for opportunities
+00:09:25.000 to enter a trade withinthe Premium Area.
+00:09:27.480 And the Premium Area is anywhereabove the 50% mid-level of the range,
+00:09:31.440 and then anywhere below the mid-level,is what we call the Discount Area.
+00:09:35.200 So with this in mind,when we move forward in time
+00:09:37.760 to see the next two daily candlesbroken down on this timeframe,
+00:09:41.040 this Fair Value Gap (FVG) is agreat area to enter a short,
+00:09:44.160 because it follows all of the criteria we arelooking for in terms of market structure,
+00:09:48.320 whilst also being within thePremium Area of the range.
+00:09:51.160 And on the other hand, if we are usinga bearish candle for our CRT range,
+00:09:55.080 we would be looking for a long entry,
+00:09:57.000 which means we would be wanting to lookfor bullish setups within the Discount Area,
+00:10:00.760 which is anywhere underthe mid level of the range.
+00:10:03.200 This will make sure you are gettingthe best risk-to-reward for your trades.
+00:10:06.920 So now let's move on to step five:
+00:10:09.000 which covers when we shouldand shouldn't use CRT.
+00:10:11.960 The concepts behind Candle RangeTheory (CRT) are very powerful,
+00:10:15.000 but only when used underthe right circumstances.
+00:10:17.400 For example, here wehave a bullish candle,
+00:10:19.520 which is then followed by a candlethat has created a Liquidity Sweep
+00:10:22.560 on the Candle Range High (CRH).
+00:10:23.880 And with only this information,
+00:10:25.280 we might expect the third candle to pushdown and attack the Candle Range Low (CRL).
+00:10:29.320 But whilst this setup mightlook promising at first,
+00:10:31.800 the crucial part that mosttraders overlook
+00:10:34.080  is making sure that the setupactually makes sense,
+00:10:36.600 within the context of theexternal market structure.
+00:10:39.280 So now that we can see the full rangefrom which these candles were taken from,
+00:10:42.880 when we analyze further into the chart,
+00:10:44.880 we can actually speculate that thisCRT setup is highly likely to fail...
+00:10:48.720 because in order for the price to pushdown and past the Candle Range Low,
+00:10:52.240 it would need to overpower thisbullish Fair Value Gap (FVG)...
+00:10:54.920 that also happens to be overlappingwith a bullish Orderblock (OB).
+00:10:57.880 So now that we have donesome further analysis,
+00:11:00.200 our bias should actually leanmore towards being bullish, 
+00:11:03.240 which opposes the ideabehind this CRT setup.
+00:11:05.760 And then when we move forward in time,
+00:11:07.480 as expected, the setup does end up failing...
+00:11:09.800 due to the strength of the buying powerfound in the bullish PD arrays.
+00:11:13.080 And now moving on here,
+00:11:14.240 here we have another potential candlethat we can use for a CRT setup.
+00:11:17.840 But this time, the setupactually has great potential
+00:11:20.520 because it has occurred at animportant point of interest,
+00:11:22.760 which is this attack on Liquidity.
+00:11:24.520 And the way we should thinkabout Candle Range Theory (CRT)
+00:11:26.640 is that it is essentially a method tosignal a reversal of the price’s direction.
+00:11:30.640 Which makes it a great toolto use during an attack of Liquidity,
+00:11:33.840 because it can help us analyzewhether we are seeing a Liquidity Run
+00:11:37.040 or a Liquidity Sweep, within themoment that it is playing out.
+00:11:40.080 But keep in mind,
+00:11:40.960 we would also have to assess thelower timeframe’s market structure
+00:11:44.240 to really have an understanding ofwhat the market is wanting to do.
+00:11:47.120 And this is because we should never takea trade using the higher timeframe,
+00:11:50.880 without understanding how the market structureis forming within the lower timeframes.
+00:11:55.160 Another great way to use CRT
+00:11:56.920 is when the price isdrawing into a PD array,
+00:11:59.280 such as this bearishFair Value Gap (FVG) here.
+00:12:01.560 The reason being is that afterthe Change of Character (CHoCH),
+00:12:04.160 we should already be under the belief
+00:12:05.680 that the price is likely toreverse from this zone.
+00:12:08.160 So we can use CandleRange Theory (CRT)
+00:12:10.120 to find the confirmation on whether thisFair Value Gap (FVG) is being respected.
+00:12:13.640 The takeaway is the Candle RangeTheory can be a very useful tool
+00:12:17.080 within your trading analysis, to identifyand trade reversals in the market.
+00:12:21.080 But, it's also just as important to understandwhen you should actually use it.
+00:12:24.800 If you found this video helpful,
+00:12:26.400 Please leave a LIKE!
+00:12:27.360 And then COMMENT what trading conceptsyou'd like to see us cover next.
