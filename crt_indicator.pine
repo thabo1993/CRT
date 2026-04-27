@@ -216,10 +216,6 @@ if newHTFRange
     activeCRMid := (htfHigh + htfLow) * 0.5
     activeCROpen := htfOpen
     activeCRClose := htfClose
-    htfOverlayOpen := htfOpen
-    htfOverlayHigh := htfHigh
-    htfOverlayLow := htfLow
-    htfOverlayClose := htfClose
     activeRangeStart := bar_index
     accumulationStart := bar_index
     accumulationBars := 0
@@ -268,13 +264,13 @@ if array.size(premiumBoxes) > 0
     box.set_right(array.get(premiumBoxes, array.size(premiumBoxes) - 1), bar_index)
 if array.size(discountBoxes) > 0
     box.set_right(array.get(discountBoxes, array.size(discountBoxes) - 1), bar_index)
-if showHTFCandleOverlay and hasHTFRange and array.size(htfCandleBodies) > 0
+if showHTFCandleOverlay and hasHTFRange and array.size(htfCandleBodies) > 0 and not na(activeRangeStart)
     htfOverlayOpen := htfOpen
     htfOverlayHigh := htfHigh
     htfOverlayLow := htfLow
     htfOverlayClose := htfClose
     box latestHTFBody = array.get(htfCandleBodies, array.size(htfCandleBodies) - 1)
-    int latestHTFLeft = nz(activeRangeStart, bar_index)
+    int latestHTFLeft = activeRangeStart
     f_updateHTFCandleBody(latestHTFBody, latestHTFLeft, bar_index, htfOverlayOpen, htfOverlayClose)
     if showHTFCandleWicks and array.size(htfCandleWicks) > 0
         line latestHTFWick = array.get(htfCandleWicks, array.size(htfCandleWicks) - 1)
