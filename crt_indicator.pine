@@ -94,7 +94,7 @@ var table dashboard = table.new(position.top_right, 2, 9, border_width=1)
 // Helpers
 //------------------------------------------------------------------------------
 f_getHTFOHLCT(string tf) =>
-    request.security(syminfo.tickerid, tf, [open, high, low, close, time], lookahead=barmerge.lookahead_off)
+    request.security(syminfo.tickerid, tf, [open, high, low, close, time], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
 
 f_rangeTolerance(float crh, float crl) =>
     float rangeSize = math.max(crh - crl, syminfo.mintick)
@@ -190,7 +190,7 @@ f_updateHTFCandleBody(box candleBody, int leftIndex, int rightIndex, float candl
 
 f_updateHTFCandleWick(line candleWick, int leftIndex, int rightIndex, float candleHigh, float candleLow, float candleOpen, float candleClose) =>
     color candleColor = f_htfCandleColor(candleOpen, candleClose)
-    int wickX = math.round((leftIndex + rightIndex) * 0.5)
+    int wickX = leftIndex + int((rightIndex - leftIndex) / 2)
     line.set_xy1(candleWick, wickX, candleHigh)
     line.set_xy2(candleWick, wickX, candleLow)
     line.set_color(candleWick, color.new(candleColor, 0))
@@ -204,7 +204,7 @@ f_newLabel(x, y, text, labelColor, textColor, labelStyle) =>
 //------------------------------------------------------------------------------
 [htfOpen, htfHigh, htfLow, htfClose, htfTime] = f_getHTFOHLCT(htfInput)
 bool hasHTFRange = not na(htfOpen) and not na(htfHigh) and not na(htfLow) and not na(htfClose)
-bool newHTFRange = hasHTFRange and ta.change(htfTime) != 0
+bool newHTFRange = hasHTFRange and timeframe.change(htfInput)
 
 if newHTFRange
     activeCRH := htfHigh
@@ -286,8 +286,11 @@ if crtPhase == PHASE_ACCUMULATION and activeSetup
     if showPhaseLabels and accumulationBars == accumulationBarsRequired
         f_newLabel(bar_index, activeCRMid, "ACC", color.new(color.gray, 10), color.white, label.style_label_center)
 
-    int barsFromAccumulation = na(accumulationStart) ? na : bar_index - accumulationStart
-    if not na(barsFromAccumulation) and accumulationBars >= accumulationBarsRequired and barsFromAccumulation <= maxManipulationBars + accumulationBarsRequired
+    bool hasAccumulationStart = not na(accumulationStart)
+    int barsFromAccumulation = 0
+    if hasAccumulationStart
+        barsFromAccumulation := bar_index - accumulationStart
+    if hasAccumulationStart and accumulationBars >= accumulationBarsRequired and barsFromAccumulation <= maxManipulationBars + accumulationBarsRequired
         if f_detectSweep(activeCRH, activeCRL, setupDirection)
             float preSweepSwingLow = ta.lowest(low[1], swingLookback)
             float preSweepSwingHigh = ta.highest(high[1], swingLookback)
