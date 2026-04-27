@@ -44,6 +44,7 @@ int PHASE_COMPLETE = 4
 int DIR_NONE = 0
 int DIR_SHORT = -1
 int DIR_LONG = 1
+int FVG_BOXES_PER_RANGE = 8
 
 var int crtPhase = PHASE_IDLE
 var int setupDirection = DIR_NONE
@@ -228,6 +229,8 @@ bool chochSignal = false
 bool shortEntrySignal = false
 bool longEntrySignal = false
 bool targetHitSignal = false
+float preSweepSwingLow = ta.lowest(low[1], swingLookback)
+float preSweepSwingHigh = ta.highest(high[1], swingLookback)
 
 if crtPhase == PHASE_ACCUMULATION and activeSetup
     accumulationBars := closeInsideRange ? accumulationBars + 1 : 0
@@ -242,7 +245,7 @@ if crtPhase == PHASE_ACCUMULATION and activeSetup
             manipulationHigh := high
             manipulationLow := low
             sweepLevel := setupDirection == DIR_SHORT ? high : low
-            chochReference := setupDirection == DIR_SHORT ? ta.lowest(low, swingLookback) : ta.highest(high, swingLookback)
+            chochReference := setupDirection == DIR_SHORT ? preSweepSwingLow : preSweepSwingHigh
             bearishSweepSignal := setupDirection == DIR_SHORT
             bullishSweepSignal := setupDirection == DIR_LONG
             if showPhaseLabels
@@ -265,7 +268,8 @@ if crtPhase == PHASE_MANIPULATION and activeSetup
 
 if (crtPhase == PHASE_MANIPULATION or crtPhase == PHASE_DISTRIBUTION) and activeSetup
     [fvgFound, fvgTop, fvgBottom] = f_detectFVG(setupDirection)
-    bool fvgInCorrectZone = setupDirection == DIR_SHORT ? f_isInPremium((fvgTop + fvgBottom) * 0.5, activeCRH, activeCRL) : f_isInDiscount((fvgTop + fvgBottom) * 0.5, activeCRH, activeCRL)
+    float fvgMidpoint = (fvgTop + fvgBottom) * 0.5
+    bool fvgInCorrectZone = setupDirection == DIR_SHORT ? f_isInPremium(fvgMidpoint, activeCRH, activeCRL) : f_isInDiscount(fvgMidpoint, activeCRH, activeCRL)
     if fvgFound and fvgInCorrectZone
         activeFvgTop := fvgTop
         activeFvgBottom := fvgBottom
@@ -274,26 +278,26 @@ if (crtPhase == PHASE_MANIPULATION or crtPhase == PHASE_DISTRIBUTION) and active
         if showFvgBoxes
             color fvgColor = setupDirection == DIR_SHORT ? color.new(color.red, 82) : color.new(color.green, 82)
             array.push(fvgBoxes, box.new(bar_index - 2, activeFvgTop, bar_index + fvgMaxAge, activeFvgBottom, bgcolor=fvgColor, border_color=color.new(fvgColor, 0)))
-            f_trimBoxArray(fvgBoxes, rangesToShow * 8)
+            f_trimBoxArray(fvgBoxes, rangesToShow * FVG_BOXES_PER_RANGE)
 
 if crtPhase == PHASE_DISTRIBUTION and activeSetup and not entryTriggered
     bool fvgStillValid = not na(activeFvgBar) and bar_index - activeFvgBar <= fvgMaxAge
     bool fvgFill = fvgStillValid and high >= activeFvgBottom and low <= activeFvgTop
-    bool chochBreakEntry = chochSignal or chochConfirmed
     bool entryByMode = false
     if entryMode == "FVG Fill + CHoCH"
         entryByMode := chochConfirmed and fvgFill
     else if entryMode == "CHoCH Break"
-        entryByMode := chochBreakEntry
+        entryByMode := chochSignal or chochConfirmed
     else
-        entryByMode := chochBreakEntry or fvgFill
+        entryByMode := chochSignal or chochConfirmed or fvgFill
     [opposingObFound, opposingObTop, opposingObBottom] = f_detectOrderBlock(setupDirection == DIR_SHORT ? DIR_LONG : DIR_SHORT)
     setupCaution := f_conflictCheck(setupDirection, activeCRH, activeCRL, activeFvgTop, activeFvgBottom, opposingObTop, opposingObBottom, opposingObFound)
 
     if entryByMode
         entryTriggered := true
         lastEntry := close
-        lastStop := setupDirection == DIR_SHORT ? manipulationHigh + f_rangeTolerance(activeCRH, activeCRL) : manipulationLow - f_rangeTolerance(activeCRH, activeCRL)
+        float stopAnchor = setupDirection == DIR_SHORT ? nz(manipulationHigh, nz(sweepLevel, high)) : nz(manipulationLow, nz(sweepLevel, low))
+        lastStop := setupDirection == DIR_SHORT ? stopAnchor + f_rangeTolerance(activeCRH, activeCRL) : stopAnchor - f_rangeTolerance(activeCRH, activeCRL)
         lastTp1 := activeCRMid
         lastTp2 := setupDirection == DIR_SHORT ? activeCRL : activeCRH
         shortEntrySignal := setupDirection == DIR_SHORT
@@ -330,10 +334,15 @@ plotshape(showSignals and shortEntrySignal, title="CRT Short Entry", style=shape
 plotshape(showSignals and longEntrySignal, title="CRT Long Entry", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, text="CRT")
 
 if showDashboard and barstate.islast
+    string htfLtfText = str.tostring(htfInput) + " / " + str.tostring(ltfReference)
+    bool chartTimeframeMatches = timeframe.period == ltfReference
+    string chartTimeframeText = chartTimeframeMatches ? timeframe.period : str.tostring(timeframe.period) + " (ref: " + str.tostring(ltfReference) + ")"
+    color chartTimeframeColor = chartTimeframeMatches ? color.white : color.orange
+
     table.cell(dashboard, 0, 0, "CRT Indicator", bgcolor=color.new(color.blue, 0), text_color=color.white)
     table.cell(dashboard, 1, 0, syminfo.ticker, bgcolor=color.new(color.blue, 0), text_color=color.white)
     table.cell(dashboard, 0, 1, "HTF / LTF", text_color=color.white, bgcolor=color.new(color.gray, 65))
-    table.cell(dashboard, 1, 1, str.format("{0} / {1}", htfInput, ltfReference))
+    table.cell(dashboard, 1, 1, htfLtfText)
     table.cell(dashboard, 0, 2, "CRH")
     table.cell(dashboard, 1, 2, na(activeCRH) ? "n/a" : str.tostring(activeCRH, format.mintick))
     table.cell(dashboard, 0, 3, "CRL")
@@ -347,7 +356,7 @@ if showDashboard and barstate.islast
     table.cell(dashboard, 0, 7, "Status")
     table.cell(dashboard, 1, 7, setupCaution ? "Caution" : invalidationSignal ? "Void" : entryTriggered ? "Entry active" : targetHitSignal ? "Target hit" : "Valid")
     table.cell(dashboard, 0, 8, "Chart TF")
-    table.cell(dashboard, 1, 8, timeframe.period == ltfReference ? timeframe.period : str.format("{0} (ref: {1})", timeframe.period, ltfReference), text_color=timeframe.period == ltfReference ? color.white : color.orange)
+    table.cell(dashboard, 1, 8, chartTimeframeText, text_color=chartTimeframeColor)
 
 //------------------------------------------------------------------------------
 // Alerts
