@@ -6,7 +6,7 @@ indicator("CRT AMD Distribution Indicator", "CRT AMD", overlay=true, max_lines_c
 //------------------------------------------------------------------------------
 groupRange = "1. CRT Range"
 htfInput = input.timeframe("D", "Higher Timeframe Range Candle", group=groupRange)
-ltfReference = input.timeframe("60", "Lower Timeframe Reference", group=groupRange, tooltip="Run the indicator on this lower timeframe for best results. This reference is displayed in the dashboard and does not change chart calculations.")
+ltfReference = input.timeframe("60", "Lower Timeframe Reference", group=groupRange, tooltip="Display-only lower timeframe reference shown in the dashboard; it does not affect indicator calculations.")
 rangesToShow = input.int(3, "Completed HTF Ranges To Display", minval=1, maxval=20, group=groupRange)
 accumulationBarsRequired = input.int(3, "Accumulation Bars Required", minval=1, maxval=50, group=groupRange)
 maxManipulationBars = input.int(5, "Max Bars From Accumulation To Sweep", minval=1, maxval=100, group=groupRange)
@@ -198,6 +198,7 @@ if newHTFRange
     activeFvgBottom := na
     activeFvgDirection := DIR_NONE
     activeFvgBar := na
+    // CRT reversal bias: a bullish HTF range looks for buy-side manipulation into shorts, while a bearish range looks for sell-side manipulation into longs.
     setupDirection := activeCRClose > activeCROpen ? DIR_SHORT : activeCRClose < activeCROpen ? DIR_LONG : DIR_NONE
     crtPhase := setupDirection == DIR_NONE ? PHASE_IDLE : PHASE_ACCUMULATION
 
