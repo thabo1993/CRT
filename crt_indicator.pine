@@ -25,6 +25,9 @@ obImpulseAtrMultiplier = input.float(1.0, "Order Block Impulse ATR Multiplier", 
 conflictZonePercent = input.float(35.0, "Conflict Search Zone (% Of CRT Range Near Target)", minval=1.0, maxval=100.0, step=1.0, group=groupFilter)
 
 groupVisual = "4. Visuals"
+showHTFCandleOverlay = input.bool(true, "Show HTF Candle Overlay", group=groupVisual)
+showHTFCandleWicks = input.bool(true, "Show HTF Candle Wicks", group=groupVisual)
+htfCandleTransparency = input.int(82, "HTF Candle Overlay Transparency", minval=0, maxval=100, group=groupVisual)
 showRangeLines = input.bool(true, "Show CRH / CRL / Mid Lines", group=groupVisual)
 showPremiumDiscount = input.bool(true, "Show Premium / Discount Zones", group=groupVisual)
 showPhaseLabels = input.bool(true, "Show AMD Phase Labels", group=groupVisual)
@@ -78,6 +81,8 @@ var array<line> crlLines = array.new_line()
 var array<line> midLines = array.new_line()
 var array<box> premiumBoxes = array.new_box()
 var array<box> discountBoxes = array.new_box()
+var array<box> htfCandleBodies = array.new_box()
+var array<line> htfCandleWicks = array.new_line()
 var array<box> fvgBoxes = array.new_box()
 var array<line> tradeLines = array.new_line()
 var array<label> tradeLabels = array.new_label()
@@ -167,6 +172,25 @@ f_trimLabelArray(array<label> labels, int keep) =>
     while array.size(labels) > keep
         label.delete(array.shift(labels))
 
+f_htfCandleColor(float candleOpen, float candleClose) =>
+    candleClose >= candleOpen ? color.teal : color.red
+
+f_updateHTFCandleOverlay(box candleBody, line candleWick, int leftIndex, int rightIndex, float candleOpen, float candleHigh, float candleLow, float candleClose) =>
+    float bodyTop = math.max(candleOpen, candleClose)
+    float bodyBottom = math.min(candleOpen, candleClose)
+    color candleColor = f_htfCandleColor(candleOpen, candleClose)
+    box.set_left(candleBody, leftIndex)
+    box.set_right(candleBody, rightIndex)
+    box.set_top(candleBody, bodyTop)
+    box.set_bottom(candleBody, bodyBottom)
+    box.set_bgcolor(candleBody, color.new(candleColor, htfCandleTransparency))
+    box.set_border_color(candleBody, color.new(candleColor, 15))
+    if not na(candleWick)
+        int wickX = int(math.round((leftIndex + rightIndex) * 0.5))
+        line.set_xy1(candleWick, wickX, candleHigh)
+        line.set_xy2(candleWick, wickX, candleLow)
+        line.set_color(candleWick, color.new(candleColor, 0))
+
 f_newLabel(x, y, text, labelColor, textColor, labelStyle) =>
     label.new(x=x, y=y, text=text, style=labelStyle, color=labelColor, textcolor=textColor, size=size.small)
 
@@ -202,6 +226,14 @@ if newHTFRange
     setupDirection := activeCRClose > activeCROpen ? DIR_SHORT : activeCRClose < activeCROpen ? DIR_LONG : DIR_NONE
     crtPhase := setupDirection == DIR_NONE ? PHASE_IDLE : PHASE_ACCUMULATION
 
+    if showHTFCandleOverlay
+        color htfCandleColor = f_htfCandleColor(activeCROpen, activeCRClose)
+        array.push(htfCandleBodies, box.new(bar_index, math.max(activeCROpen, activeCRClose), bar_index, math.min(activeCROpen, activeCRClose), bgcolor=color.new(htfCandleColor, htfCandleTransparency), border_color=color.new(htfCandleColor, 15)))
+        f_trimBoxArray(htfCandleBodies, rangesToShow)
+        if showHTFCandleWicks
+            array.push(htfCandleWicks, line.new(bar_index, activeCRH, bar_index, activeCRL, color=color.new(htfCandleColor, 0), width=2))
+            f_trimLineArray(htfCandleWicks, rangesToShow)
+
     if showRangeLines
         array.push(crhLines, line.new(bar_index, activeCRH, bar_index + 1, activeCRH, extend=extend.right, color=color.new(color.red, 0), style=line.style_dashed, width=1))
         array.push(crlLines, line.new(bar_index, activeCRL, bar_index + 1, activeCRL, extend=extend.right, color=color.new(color.green, 0), style=line.style_dashed, width=1))
@@ -223,6 +255,10 @@ if array.size(premiumBoxes) > 0
     box.set_right(array.get(premiumBoxes, array.size(premiumBoxes) - 1), bar_index)
 if array.size(discountBoxes) > 0
     box.set_right(array.get(discountBoxes, array.size(discountBoxes) - 1), bar_index)
+if showHTFCandleOverlay and hasHTFRange and array.size(htfCandleBodies) > 0
+    box latestHTFBody = array.get(htfCandleBodies, array.size(htfCandleBodies) - 1)
+    line latestHTFWick = showHTFCandleWicks and array.size(htfCandleWicks) > 0 ? array.get(htfCandleWicks, array.size(htfCandleWicks) - 1) : na
+    f_updateHTFCandleOverlay(latestHTFBody, latestHTFWick, nz(activeRangeStart, bar_index), bar_index, htfOpen, htfHigh, htfLow, htfClose)
 
 //------------------------------------------------------------------------------
 // AMD state machine

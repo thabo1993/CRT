@@ -9,6 +9,7 @@ This repository contains a Pine Script v5 indicator for TradingView that helps i
 ## What the indicator does
 
 - Tracks a higher-timeframe candle range.
+- Overlays translucent higher-timeframe candles on the lower-timeframe chart.
 - Plots CRH, CRL, and 50% equilibrium levels.
 - Detects accumulation inside the active CRT range.
 - Flags buy-side and sell-side liquidity sweeps.
@@ -37,7 +38,8 @@ This repository contains a Pine Script v5 indicator for TradingView that helps i
 3. Copy the contents of `crt_indicator.pine` into the editor.
 4. Save and add the indicator to your chart.
 5. Choose the higher timeframe range and lower timeframe reference in the indicator settings.
-6. Adjust sweep tolerance, entry mode, and visual toggles as needed.
+6. Use the HTF candle overlay settings to display the higher-timeframe candle body and wick directly on the chart.
+7. Adjust sweep tolerance, entry mode, and visual toggles as needed.
 
 ## Alerts
 
