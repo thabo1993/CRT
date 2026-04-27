@@ -86,7 +86,7 @@ var table dashboard = table.new(position.top_right, 2, 8, border_width=1)
 // Helpers
 //------------------------------------------------------------------------------
 f_getHTFData(string tf) =>
-    request.security(syminfo.tickerid, tf, [open[1], high[1], low[1], close[1], time[1]], lookahead=barmerge.lookahead_off)
+    request.security(syminfo.tickerid, tf, [open, high, low, close, time], lookahead=barmerge.lookahead_off)
 
 f_rangeTolerance(float crh, float crl) =>
     float rangeSize = math.max(crh - crl, syminfo.mintick)
@@ -242,7 +242,7 @@ if crtPhase == PHASE_ACCUMULATION and activeSetup
             manipulationHigh := high
             manipulationLow := low
             sweepLevel := setupDirection == DIR_SHORT ? high : low
-            chochReference := setupDirection == DIR_SHORT ? ta.lowest(low, swingLookback)[1] : ta.highest(high, swingLookback)[1]
+            chochReference := setupDirection == DIR_SHORT ? ta.lowest(low[1], swingLookback) : ta.highest(high[1], swingLookback)
             bearishSweepSignal := setupDirection == DIR_SHORT
             bullishSweepSignal := setupDirection == DIR_LONG
             if showPhaseLabels
@@ -333,7 +333,7 @@ if showDashboard and barstate.islast
     table.cell(dashboard, 0, 0, "CRT Indicator", bgcolor=color.new(color.blue, 0), text_color=color.white)
     table.cell(dashboard, 1, 0, syminfo.ticker, bgcolor=color.new(color.blue, 0), text_color=color.white)
     table.cell(dashboard, 0, 1, "HTF / LTF", text_color=color.white, bgcolor=color.new(color.gray, 65))
-    table.cell(dashboard, 1, 1, htfInput + " / " + ltfReference)
+    table.cell(dashboard, 1, 1, str.format("{0} / {1}", htfInput, ltfReference))
     table.cell(dashboard, 0, 2, "CRH")
     table.cell(dashboard, 1, 2, na(activeCRH) ? "n/a" : str.tostring(activeCRH, format.mintick))
     table.cell(dashboard, 0, 3, "CRL")
