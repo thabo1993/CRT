@@ -6,7 +6,7 @@ indicator("CRT AMD Distribution Indicator", "CRT AMD", overlay=true, max_lines_c
 //------------------------------------------------------------------------------
 groupRange = "1. CRT Range"
 htfInput = input.timeframe("D", "Higher Timeframe Range Candle", group=groupRange)
-ltfReference = input.timeframe("60", "Lower Timeframe Reference", group=groupRange, tooltip="Run the indicator on this lower timeframe for best results. This value is displayed in the dashboard only.")
+ltfReference = input.timeframe("60", "Lower Timeframe Reference", group=groupRange, tooltip="Run the indicator on this lower timeframe for best results. This reference is displayed in the dashboard alongside the HTF setting.")
 rangesToShow = input.int(3, "Completed HTF Ranges To Display", minval=1, maxval=20, group=groupRange)
 accumulationBarsRequired = input.int(3, "Accumulation Bars Required", minval=1, maxval=50, group=groupRange)
 maxManipulationBars = input.int(5, "Max Bars From Accumulation To Sweep", minval=1, maxval=100, group=groupRange)
@@ -86,7 +86,7 @@ var table dashboard = table.new(position.top_right, 2, 8, border_width=1)
 // Helpers
 //------------------------------------------------------------------------------
 f_getHTFData(string tf) =>
-    request.security(syminfo.tickerid, tf, [open[1], high[1], low[1], close[1], time[1]], lookahead=barmerge.lookahead_on)
+    request.security(syminfo.tickerid, tf, [open[1], high[1], low[1], close[1], time[1]], lookahead=barmerge.lookahead_off)
 
 f_rangeTolerance(float crh, float crl) =>
     float rangeSize = math.max(crh - crl, syminfo.mintick)
@@ -234,7 +234,7 @@ if crtPhase == PHASE_ACCUMULATION and activeSetup
     if showPhaseLabels and accumulationBars == accumulationBarsRequired
         f_newLabel(bar_index, activeCRMid, "ACC", color.new(color.gray, 10), color.white, label.style_label_center)
 
-    int barsFromAccumulation = bar_index - nz(accumulationStart, bar_index)
+    int barsFromAccumulation = bar_index - nz(accumulationStart, 0)
     if accumulationBars >= accumulationBarsRequired and barsFromAccumulation <= maxManipulationBars + accumulationBarsRequired
         if f_detectSweep(activeCRH, activeCRL, setupDirection)
             crtPhase := PHASE_MANIPULATION
@@ -280,7 +280,13 @@ if crtPhase == PHASE_DISTRIBUTION and activeSetup and not entryTriggered
     bool fvgStillValid = not na(activeFvgBar) and bar_index - activeFvgBar <= fvgMaxAge
     bool fvgFill = fvgStillValid and high >= activeFvgBottom and low <= activeFvgTop
     bool chochBreakEntry = chochSignal or chochConfirmed
-    bool entryByMode = entryMode == "FVG Fill + CHoCH" ? chochConfirmed and fvgFill : entryMode == "CHoCH Break" ? chochBreakEntry : chochBreakEntry or fvgFill
+    bool entryByMode = false
+    if entryMode == "FVG Fill + CHoCH"
+        entryByMode := chochConfirmed and fvgFill
+    else if entryMode == "CHoCH Break"
+        entryByMode := chochBreakEntry
+    else
+        entryByMode := chochBreakEntry or fvgFill
     [opposingObFound, opposingObTop, opposingObBottom] = f_detectOrderBlock(setupDirection == DIR_SHORT ? DIR_LONG : DIR_SHORT)
     setupCaution := f_conflictCheck(setupDirection, activeCRH, activeCRL, activeFvgTop, activeFvgBottom, opposingObTop, opposingObBottom, opposingObFound)
 
@@ -294,7 +300,7 @@ if crtPhase == PHASE_DISTRIBUTION and activeSetup and not entryTriggered
         longEntrySignal := setupDirection == DIR_LONG
 
         if showSignals
-            string entryText = (setupDirection == DIR_SHORT ? "SHORT" : "LONG") + (setupCaution ? "\nCAUTION: PD conflict" : "")
+            string entryText = (setupDirection == DIR_SHORT ? "SHORT" : "LONG") + (setupCaution ? "\nCAUTION: PD Conflict" : "")
             f_newLabel(bar_index, lastEntry, entryText, setupCaution ? color.new(color.yellow, 0) : setupDirection == DIR_SHORT ? color.new(color.red, 0) : color.new(color.green, 0), setupCaution ? color.black : color.white, setupDirection == DIR_SHORT ? label.style_label_down : label.style_label_up)
 
         if showTradeLevels
