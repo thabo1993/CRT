@@ -58,6 +58,10 @@ var float activeCRL = na
 var float activeCRMid = na
 var float activeCROpen = na
 var float activeCRClose = na
+var float overlayHTFOpen = na
+var float overlayHTFHigh = na
+var float overlayHTFLow = na
+var float overlayHTFClose = na
 var int activeRangeStart = na
 var int accumulationStart = na
 var int accumulationBars = 0
@@ -212,6 +216,10 @@ if newHTFRange
     activeCRMid := (htfHigh + htfLow) * 0.5
     activeCROpen := htfOpen
     activeCRClose := htfClose
+    overlayHTFOpen := htfOpen
+    overlayHTFHigh := htfHigh
+    overlayHTFLow := htfLow
+    overlayHTFClose := htfClose
     activeRangeStart := bar_index
     accumulationStart := bar_index
     accumulationBars := 0
@@ -261,12 +269,15 @@ if array.size(premiumBoxes) > 0
 if array.size(discountBoxes) > 0
     box.set_right(array.get(discountBoxes, array.size(discountBoxes) - 1), bar_index)
 if showHTFCandleOverlay and hasHTFRange and array.size(htfCandleBodies) > 0
+    overlayHTFHigh := htfHigh
+    overlayHTFLow := htfLow
+    overlayHTFClose := htfClose
     box latestHTFBody = array.get(htfCandleBodies, array.size(htfCandleBodies) - 1)
     int latestHTFLeft = nz(activeRangeStart, bar_index)
-    f_updateHTFCandleBody(latestHTFBody, latestHTFLeft, bar_index, htfOpen, htfClose)
+    f_updateHTFCandleBody(latestHTFBody, latestHTFLeft, bar_index, overlayHTFOpen, overlayHTFClose)
     if showHTFCandleWicks and array.size(htfCandleWicks) > 0
         line latestHTFWick = array.get(htfCandleWicks, array.size(htfCandleWicks) - 1)
-        f_updateHTFCandleWick(latestHTFWick, latestHTFLeft, bar_index, htfHigh, htfLow, htfOpen, htfClose)
+        f_updateHTFCandleWick(latestHTFWick, latestHTFLeft, bar_index, overlayHTFHigh, overlayHTFLow, overlayHTFOpen, overlayHTFClose)
 
 //------------------------------------------------------------------------------
 // AMD state machine
