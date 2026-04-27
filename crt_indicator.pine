@@ -6,7 +6,7 @@ indicator("CRT AMD Distribution Indicator", "CRT AMD", overlay=true, max_lines_c
 //------------------------------------------------------------------------------
 groupRange = "1. CRT Range"
 htfInput = input.timeframe("D", "Higher Timeframe Range Candle", group=groupRange)
-ltfReference = input.timeframe("60", "Lower Timeframe Reference", group=groupRange, tooltip="Run the indicator on this lower timeframe for best results. This reference is displayed in the dashboard alongside the HTF setting.")
+ltfReference = input.timeframe("60", "Lower Timeframe Reference", group=groupRange, tooltip="Run the indicator on this lower timeframe for best results. This reference is displayed in the dashboard and does not change chart calculations.")
 rangesToShow = input.int(3, "Completed HTF Ranges To Display", minval=1, maxval=20, group=groupRange)
 accumulationBarsRequired = input.int(3, "Accumulation Bars Required", minval=1, maxval=50, group=groupRange)
 maxManipulationBars = input.int(5, "Max Bars From Accumulation To Sweep", minval=1, maxval=100, group=groupRange)
@@ -80,12 +80,12 @@ var array<box> discountBoxes = array.new_box()
 var array<box> fvgBoxes = array.new_box()
 var array<line> tradeLines = array.new_line()
 var array<label> tradeLabels = array.new_label()
-var table dashboard = table.new(position.top_right, 2, 8, border_width=1)
+var table dashboard = table.new(position.top_right, 2, 9, border_width=1)
 
 //------------------------------------------------------------------------------
 // Helpers
 //------------------------------------------------------------------------------
-f_getHTFData(string tf) =>
+f_getHTFOHLCT(string tf) =>
     request.security(syminfo.tickerid, tf, [open, high, low, close, time], lookahead=barmerge.lookahead_off)
 
 f_rangeTolerance(float crh, float crl) =>
@@ -166,7 +166,7 @@ f_newLabel(x, y, text, labelColor, textColor, labelStyle) =>
 //------------------------------------------------------------------------------
 // HTF range cache
 //------------------------------------------------------------------------------
-[htfOpen, htfHigh, htfLow, htfClose, htfTime] = f_getHTFData(htfInput)
+[htfOpen, htfHigh, htfLow, htfClose, htfTime] = f_getHTFOHLCT(htfInput)
 bool hasHTFRange = not na(htfOpen) and not na(htfHigh) and not na(htfLow) and not na(htfClose)
 bool newHTFRange = hasHTFRange and ta.change(htfTime) != 0
 
@@ -242,7 +242,7 @@ if crtPhase == PHASE_ACCUMULATION and activeSetup
             manipulationHigh := high
             manipulationLow := low
             sweepLevel := setupDirection == DIR_SHORT ? high : low
-            chochReference := setupDirection == DIR_SHORT ? ta.lowest(low[1], swingLookback) : ta.highest(high[1], swingLookback)
+            chochReference := setupDirection == DIR_SHORT ? ta.lowest(low, swingLookback) : ta.highest(high, swingLookback)
             bearishSweepSignal := setupDirection == DIR_SHORT
             bullishSweepSignal := setupDirection == DIR_LONG
             if showPhaseLabels
@@ -346,6 +346,8 @@ if showDashboard and barstate.islast
     table.cell(dashboard, 1, 6, f_directionText(setupDirection))
     table.cell(dashboard, 0, 7, "Status")
     table.cell(dashboard, 1, 7, setupCaution ? "Caution" : invalidationSignal ? "Void" : entryTriggered ? "Entry active" : targetHitSignal ? "Target hit" : "Valid")
+    table.cell(dashboard, 0, 8, "Chart TF")
+    table.cell(dashboard, 1, 8, timeframe.period == ltfReference ? timeframe.period : str.format("{0} (ref: {1})", timeframe.period, ltfReference), text_color=timeframe.period == ltfReference ? color.white : color.orange)
 
 //------------------------------------------------------------------------------
 // Alerts
